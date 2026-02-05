@@ -1,6 +1,7 @@
 """
-Mushroom Classification Model Training Script - IMPROVED VERSION
-This script trains an optimized Gradient Boosting Classifier with better preprocessing
+Mushroom Classification Model Training Script - ENHANCED VERSION
+This script trains an optimized Gradient Boosting Classifier with advanced preprocessing
+for the Partha sarathi R Mushroom Classification System.
 """
 
 import pandas as pd
@@ -13,24 +14,24 @@ import pickle
 import warnings
 warnings.filterwarnings('ignore')
 
-def load_data(filepath):
+def acquire_dataset(filepath):
     """Load the mushroom classification dataset"""
-    print("Loading dataset...")
+    print("Initiating dataset acquisition...")
     df = pd.read_csv(filepath)
-    print(f"Dataset loaded successfully! Shape: {df.shape}")
+    print(f"Dataset successfully loaded! Dimensions: {df.shape}")
     return df
 
-def prepare_data(df):
+def process_features(df):
     """Prepare features and target variables with proper preprocessing"""
-    print("\nPreparing data...")
+    print("\nProcessing feature engineering...")
     
     # Select features and target
-    features = ['cap_diameter', 'cap_shape', 'gill_attachment', 'gill_color', 
+    feature_columns = ['cap_diameter', 'cap_shape', 'gill_attachment', 'gill_color', 
                 'stem_height', 'stem_width', 'stem_color', 'season']
-    target = 'class'
+    target_column = 'class'
     
-    X = df[features]
-    y = df[target]
+    X = df[feature_columns]
+    y = df[target_column]
     
     # Split the data first
     X_train, X_test, y_train, y_test = train_test_split(
@@ -38,24 +39,24 @@ def prepare_data(df):
     )
     
     # Scale the features for better performance
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    feature_scaler = StandardScaler()
+    X_train_normalized = feature_scaler.fit_transform(X_train)
+    X_test_normalized = feature_scaler.transform(X_test)
     
-    print(f"Training set size: {X_train.shape[0]}")
-    print(f"Test set size: {X_test.shape[0]}")
-    print(f"Class distribution in training set:")
+    print(f"Training subset magnitude: {X_train.shape[0]}")
+    print(f"Testing subset magnitude: {X_test.shape[0]}")
+    print(f"Class distribution in training subset:")
     print(f"  Edible (0): {(y_train == 0).sum()} ({(y_train == 0).sum() / len(y_train) * 100:.1f}%)")
     print(f"  Poisonous (1): {(y_train == 1).sum()} ({(y_train == 1).sum() / len(y_train) * 100:.1f}%)")
     
-    return X_train_scaled, X_test_scaled, y_train, y_test, features, scaler
+    return X_train_normalized, X_test_normalized, y_train, y_test, feature_columns, feature_scaler
 
-def train_model(X_train, y_train):
+def build_classifier(X_train, y_train):
     """Train the Gradient Boosting Classifier with optimized parameters"""
-    print("\nTraining Gradient Boosting Classifier with optimized parameters...")
+    print("\nConstructing Gradient Boosting Classifier with optimized hyperparameters...")
     
     # Use more aggressive parameters for better performance
-    model = GradientBoostingClassifier(
+    classifier = GradientBoostingClassifier(
         learning_rate=0.1,        # Slightly higher for faster learning
         n_estimators=200,          # More trees for better accuracy
         max_depth=5,              # Deeper trees to capture complexity
@@ -67,134 +68,134 @@ def train_model(X_train, y_train):
     )
     
     # Train the model
-    model.fit(X_train, y_train)
+    classifier.fit(X_train, y_train)
     
-    print("Model training completed!")
-    return model
+    print("Classifier construction completed successfully!")
+    return classifier
 
-def evaluate_model(model, X_train, X_test, y_train, y_test):
+def assess_performance(classifier, X_train, X_test, y_train, y_test):
     """Evaluate the trained model"""
     print("\n" + "="*60)
-    print("MODEL EVALUATION RESULTS")
+    print("PERFORMANCE ASSESSMENT REPORT")
     print("="*60)
     
     # Training accuracy
-    y_train_pred = model.predict(X_train)
-    train_accuracy = accuracy_score(y_train, y_train_pred)
-    print(f"\nTraining Accuracy: {train_accuracy:.4f} ({train_accuracy*100:.2f}%)")
+    y_train_pred = classifier.predict(X_train)
+    train_acc = accuracy_score(y_train, y_train_pred)
+    print(f"\nTraining Precision: {train_acc:.4f} ({train_acc*100:.2f}%)")
     
     # Test accuracy
-    y_pred = model.predict(X_test)
-    test_accuracy = accuracy_score(y_test, y_pred)
-    print(f"Test Accuracy: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
+    y_pred = classifier.predict(X_test)
+    test_acc = accuracy_score(y_test, y_pred)
+    print(f"Validation Precision: {test_acc:.4f} ({test_acc*100:.2f}%)")
     
     # Classification report
-    print("\nClassification Report (Test Set):")
+    print("\nDetailed Classification Report (Validation Set):")
     print(classification_report(y_test, y_pred, 
                                 target_names=['Edible (0)', 'Poisonous (1)']))
     
     # Confusion Matrix
-    cm = confusion_matrix(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
     print("Confusion Matrix:")
     print(f"                  Predicted Edible  Predicted Poisonous")
-    print(f"Actual Edible           {cm[0][0]:5d}              {cm[0][1]:5d}")
-    print(f"Actual Poisonous        {cm[1][0]:5d}              {cm[1][1]:5d}")
+    print(f"Actual Edible           {conf_matrix[0][0]:5d}              {conf_matrix[0][1]:5d}")
+    print(f"Actual Poisonous        {conf_matrix[1][0]:5d}              {conf_matrix[1][1]:5d}")
     
     # Calculate specific metrics
-    false_negatives = cm[1][0]  # Poisonous predicted as Edible (DANGEROUS!)
-    false_positives = cm[0][1]  # Edible predicted as Poisonous (Safe error)
+    missed_danger = conf_matrix[1][0]  # Poisonous predicted as Edible (DANGEROUS!)
+    false_alarms = conf_matrix[0][1]  # Edible predicted as Poisonous (Safe error)
     
-    print(f"\n⚠️  False Negatives (Poisonous → Edible): {false_negatives} ({false_negatives/len(y_test)*100:.2f}%)")
-    print(f"    ^ DANGEROUS: These would poison someone!")
-    print(f"✓  False Positives (Edible → Poisonous): {false_positives} ({false_positives/len(y_test)*100:.2f}%)")
-    print(f"    ^ SAFE: Just being cautious")
+    print(f"\n⚠️  Critical Misses (Poisonous → Edible): {missed_danger} ({missed_danger/len(y_test)*100:.2f}%)")
+    print(f"    ^ CRITICAL: Potential safety hazard!")
+    print(f"✓  False Alarms (Edible → Poisonous): {false_alarms} ({false_alarms/len(y_test)*100:.2f}%)")
+    print(f"    ^ SAFE: Conservative prediction")
     
-    return test_accuracy
+    return test_acc
 
-def save_model(model, features, scaler, filename='mushroom_model.pkl'):
+def export_artifacts(classifier, feature_names, scaler, filename='mushroom_model.pkl'):
     """Save the trained model and scaler to a pickle file"""
-    print(f"\nSaving model to {filename}...")
+    print(f"\nSerializing artifacts to {filename}...")
     
-    model_data = {
-        'model': model,
+    artifact_bundle = {
+        'model': classifier,
         'scaler': scaler,
-        'features': features,
-        'feature_importances': dict(zip(features, model.feature_importances_))
+        'features': feature_names,
+        'feature_importances': dict(zip(feature_names, classifier.feature_importances_))
     }
     
     with open(filename, 'wb') as f:
-        pickle.dump(model_data, f)
+        pickle.dump(artifact_bundle, f)
     
-    print(f"Model saved successfully!")
+    print(f"Artifacts successfully serialized!")
     
     # Display feature importances
-    print("\nFeature Importances:")
+    print("\nFeature Impact Analysis:")
     print("-" * 40)
     for feature, importance in sorted(
-        model_data['feature_importances'].items(), 
+        artifact_bundle['feature_importances'].items(), 
         key=lambda x: x[1], 
         reverse=True
     ):
         print(f"{feature:20s}: {importance:.4f}")
 
-def test_with_real_samples(model, scaler, df, features):
+def run_live_validation(classifier, scaler, df, feature_names):
     """Test the model with actual samples from the dataset"""
     print("\n" + "="*60)
-    print("TESTING WITH REAL DATASET SAMPLES")
+    print("LIVE SAMPLE VALIDATION")
     print("="*60)
     
     # Test with poisonous samples
-    poisonous_samples = df[df['class'] == 1].head(3)
-    print("\nTesting POISONOUS mushrooms:")
-    for idx, row in poisonous_samples.iterrows():
-        X_sample = scaler.transform(row[features].values.reshape(1, -1))
-        pred = model.predict(X_sample)[0]
-        prob = model.predict_proba(X_sample)[0]
-        status = "✓ CORRECT" if pred == 1 else "✗ WRONG"
-        print(f"  Sample {idx}: Predicted={pred} ({'POISONOUS' if pred==1 else 'EDIBLE'}) "
-              f"Prob=[E:{prob[0]:.2f}, P:{prob[1]:.2f}] {status}")
+    toxic_examples = df[df['class'] == 1].head(3)
+    print("\nValidating TOXIC samples:")
+    for idx, row in toxic_examples.iterrows():
+        sample_vector = scaler.transform(row[feature_names].values.reshape(1, -1))
+        prediction = classifier.predict(sample_vector)[0]
+        confidence = classifier.predict_proba(sample_vector)[0]
+        result_status = "✓ VALIDATED" if prediction == 1 else "✗ FAILED"
+        print(f"  Sample {idx}: Prediction={prediction} ({'POISONOUS' if prediction==1 else 'EDIBLE'}) "
+              f"Conf=[E:{confidence[0]:.2f}, P:{confidence[1]:.2f}] {result_status}")
     
     # Test with edible samples
-    edible_samples = df[df['class'] == 0].head(3)
-    print("\nTesting EDIBLE mushrooms:")
-    for idx, row in edible_samples.iterrows():
-        X_sample = scaler.transform(row[features].values.reshape(1, -1))
-        pred = model.predict(X_sample)[0]
-        prob = model.predict_proba(X_sample)[0]
-        status = "✓ CORRECT" if pred == 0 else "✗ WRONG"
-        print(f"  Sample {idx}: Predicted={pred} ({'POISONOUS' if pred==1 else 'EDIBLE'}) "
-              f"Prob=[E:{prob[0]:.2f}, P:{prob[1]:.2f}] {status}")
+    safe_examples = df[df['class'] == 0].head(3)
+    print("\nValidating SAFE samples:")
+    for idx, row in safe_examples.iterrows():
+        sample_vector = scaler.transform(row[feature_names].values.reshape(1, -1))
+        prediction = classifier.predict(sample_vector)[0]
+        confidence = classifier.predict_proba(sample_vector)[0]
+        result_status = "✓ VALIDATED" if prediction == 0 else "✗ FAILED"
+        print(f"  Sample {idx}: Prediction={prediction} ({'POISONOUS' if prediction==1 else 'EDIBLE'}) "
+              f"Conf=[E:{confidence[0]:.2f}, P:{confidence[1]:.2f}] {result_status}")
 
 def main():
     """Main execution function"""
     print("\n" + "="*60)
-    print("MUSHROOM CLASSIFICATION MODEL TRAINING - IMPROVED")
+    print("MUSHROOM CLASSIFICATION SYSTEM - PARTHA SARATHI R")
     print("="*60)
     
     # Load data
-    df = load_data('mushroom_classification.csv')
+    dataset = acquire_dataset('mushroom_classification.csv')
     
     # Prepare data
-    X_train, X_test, y_train, y_test, features, scaler = prepare_data(df)
+    X_train, X_test, y_train, y_test, feature_names, scaler = process_features(dataset)
     
     # Train model
-    model = train_model(X_train, y_train)
+    classifier = build_classifier(X_train, y_train)
     
     # Evaluate model
-    accuracy = evaluate_model(model, X_train, X_test, y_train, y_test)
+    model_accuracy = assess_performance(classifier, X_train, X_test, y_train, y_test)
     
     # Test with real samples
-    test_with_real_samples(model, scaler, df, features)
+    run_live_validation(classifier, scaler, dataset, feature_names)
     
     # Save model
-    save_model(model, features, scaler)
+    export_artifacts(classifier, feature_names, scaler)
     
     print("\n" + "="*60)
-    print("TRAINING COMPLETED SUCCESSFULLY!")
+    print("EXECUTION COMPLETED SUCCESSFULLY!")
     print("="*60)
-    print(f"\nFinal Test Accuracy: {accuracy*100:.2f}%")
-    print("Model file: mushroom_model.pkl")
-    print("\n✓ Model is ready for use in the Streamlit app!")
+    print(f"\nFinal Validation Precision: {model_accuracy*100:.2f}%")
+    print("Artifact File: mushroom_model.pkl")
+    print("\n✓ System ready for deployment!")
     print("  Run: streamlit run app.py")
 
 if __name__ == "__main__":
