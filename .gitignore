@@ -1,0 +1,31 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignore Jupyter Notebook
+*.ipynb
+.ipynb_checkpoints/
+
+# Ignore documentation (not needed for deployment)
+PROJECT_BRIEF.md
+ANALYSIS_REPORT.md
+assignment.ipynb
+assignment_backup.ipynb
+
+# Ignore system files
+.DS_Store
+.vscode/
+.idea/
+
+# Ignore virtual environment
+venv/
+env/
+ENV/
+
+# Ignore logs
+*.log
+
+# Ignore brain/artifact directory
+.gemini/
